@@ -220,8 +220,8 @@ public function showOrderDetails(Request $request)
     // Prepare the basic data to send back to the frontend
     $data = [
         'client_name' => $clientProfile->client_name,     
-        'client_gst_no' => $clientProfile->gst_number,
-        'client_gst_document' => $clientProfile->gst_document,
+        'client_gst_no' => $clientProfile->client_gst_no,
+        'client_gst_document' => $clientProfile->client_gst_document,
         'address' => $clientProfile->address,
         'associate_name' => $order->associate_name,
         'product_name' => $order->product_name,
