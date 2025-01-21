@@ -28,9 +28,9 @@ class AssociatePaymentController extends Controller
         ]);
 
          // Begin database transaction
-    DB::beginTransaction();
+       DB::beginTransaction();
 
-    try {
+     try {
         // Create a payment receipt
         $paymentReceipt = AssociatePaymentReceipt::create($validatedData);
 
@@ -62,7 +62,7 @@ class AssociatePaymentController extends Controller
             'message' => 'Payment receipt created and associate payment updated successfully.',
             'payment_receipt' => $paymentReceipt,
         ], 201);
-    } catch (\Exception $e) {
+     } catch (\Exception $e) {
         // Rollback the transaction on error
         DB::rollBack();
 
@@ -70,7 +70,7 @@ class AssociatePaymentController extends Controller
             'message' => 'Failed to create payment receipt and update associate payment.',
             'error' => $e->getMessage(),
         ], 500);
-    }
+     }
     }
 
     public function getPaymentRecipts()
@@ -82,4 +82,29 @@ class AssociatePaymentController extends Controller
             'data' => $paymentReceipts,
         ]);
     }
+
+    public function getAssociatePaymentReceipts(Request $request)
+{
+    $associateId = $request->input('associate_id');
+
+    if (!$associateId) {
+        return response()->json([
+            'message' => 'Associate ID is required.',
+        ], 400); // Bad Request
+    }
+
+    // Filter the payment receipts by associate_id
+    $paymentReceipts = AssociatePaymentReceipt::where('associate_id', $associateId)->get();
+
+    if ($paymentReceipts->isEmpty()) {
+        return response()->json([
+            'message' => 'No payment receipts found for the given Associate ID.',
+        ], 404); // Not Found
+    }
+
+    return response()->json([
+        'message' => 'Payment receipts retrieved successfully.',
+        'data' => $paymentReceipts,
+    ]);
+}
 }

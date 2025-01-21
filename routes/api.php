@@ -116,6 +116,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('associate/client-name', [AssociateClientController::class, 'getAllClientNames']);
 Route::post('validate-associate-client', [AssociateClientController::class, 'validateAssociateClient']);
 Route::get('/associate-client-details/{id}', [AssociateClientController::class, 'getAssociateClientById']);
+Route::post('/associate-client-update/{id}', [AssociateClientController::class, 'update']);
 Route::get('/associate-clients', [AssociateClientController::class, 'index']);
   
 });
@@ -178,6 +179,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/associate-payments', [AssociatePaymentController::class, 'index']); // Get all
     Route::post('/payment-recipts-save', [AssociatePaymentController::class, 'store']); // Create payment receipt
     Route::get('/payment-recipts', [AssociatePaymentController::class, 'getPaymentRecipts']); // Get all payment receipts
+    Route::get('/payment-recipts-history', [AssociatePaymentController::class, 'getAssociatePaymentReceipts']); // Get all payment receipts
 });
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/associate-client-certificate', [AssociateClientCertificateController::class, 'store']);
