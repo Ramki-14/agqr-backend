@@ -24,7 +24,7 @@ class UserController extends Controller
      */
     public function createAdmin(Request $request)
     {
-        $currentUser = Auth::user();
+        $currentUser = Auth::user(); 
 
         // Check if the current user is an admin
         if (!($currentUser instanceof Admin)) {
@@ -106,7 +106,7 @@ class UserController extends Controller
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', 
             'role' => 'required|in:user', // Only users can be created
             'category' => 'required',  // New validation for category
-            'ba_name' => 'nullable|string', // New validation for BA name
+           
         ]);
        
         $imagePath = null;
@@ -126,7 +126,6 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
             'contact_no' => $request->contact_no,
             'category' => $request->category, 
-            'ba_name' => $request->ba_name,    
             'image' => $imagePath,
             'role' => $request->role,
         ]);
