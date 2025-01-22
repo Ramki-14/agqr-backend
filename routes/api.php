@@ -163,9 +163,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/certificates', [CertificatesController::class, 'store']);
+    Route::get('/all-certificates', [CertificatesController::class, 'index']);
     Route::post('/check-certificate', [CertificatesController::class, 'checkCertificate']);
     Route::post('/certificates/fetch', [CertificatesController::class, 'fetchCertificate']);
     Route::post('/certificates/{id}', [CertificatesController::class, 'update']);
+    Route::post('/get-client-details', [CertificatesController::class, 'getClientDetails']);
 });
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/associate-client-orders', [AssociateClientOrderController::class, 'store']);

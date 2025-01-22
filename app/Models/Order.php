@@ -25,7 +25,7 @@ class Order extends Model
         'status',
     ];
 
-    public function client()
+    public function clientProfile()
 {
     return $this->belongsTo(ClientProfile::class, 'client_id', 'client_id');
 }
