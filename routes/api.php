@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AssociateClientOrderController;
 use App\Http\Controllers\Api\CertificatesController;
 use App\Http\Controllers\Api\CGSTController;
 use App\Http\Controllers\Api\ClientProfileController;
+use App\Http\Controllers\Api\CommandController;
 use App\Http\Controllers\Api\FileController;
 use App\Http\Controllers\Api\IGSTController;
 use App\Http\Controllers\Api\OrderController;
@@ -40,6 +41,8 @@ Route::post('/login', [UserController::class, 'loginUser']);
 
 
 // Middleware to protect routes for different user types
+Route::post('/run-certificate-status', [CommandController::class, 'runCertificateStatus'])->middleware('auth:sanctum');
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         $user = $request->user();

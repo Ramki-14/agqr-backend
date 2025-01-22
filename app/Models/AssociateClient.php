@@ -13,6 +13,7 @@ class AssociateClient extends Model
     protected $fillable = [
         'account_type',
         'client_name',
+        'associate_id',
         'address',
         'client_gst_no',
         'company_name',

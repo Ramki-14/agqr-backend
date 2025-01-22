@@ -100,6 +100,7 @@ public function updateAssociateOrder(Request $request)
     $request->validate([
         'id' => 'required|exists:associate_client_orders,id',
         'client_id' => 'required|exists:associate_client,id',
+        'associate_id' => 'required|exists:associate_client,associate_id',
         'rate' => 'required|numeric',
         'sgst_amount' => 'required|numeric',
         'cgst_amount' => 'required|numeric',
