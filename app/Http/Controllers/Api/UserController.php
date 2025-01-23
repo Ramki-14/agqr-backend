@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
+use App\Models\AssociateClient;
+use App\Models\AssociateClientCertificate;
 use App\Models\UserLogin;
 use App\Models\AssociativeLogin;
+use App\Models\Certificate;
 use App\Models\ClientProfile;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +16,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
@@ -59,7 +63,7 @@ class UserController extends Controller
         $email = $request->email;
         $password = $request->password;
     
-        \Mail::to($email)->send(new \App\Mail\UserCredentialsMail($email, $password));
+        Mail::to($email)->send(new \App\Mail\UserCredentialsMail($email, $password));
     
     
         $admin = Admin::create([
@@ -118,7 +122,7 @@ class UserController extends Controller
         $email = $request->email;
         $password = $request->password;
     
-        \Mail::to($email)->send(new \App\Mail\UserCredentialsMail($email, $password));
+        Mail::to($email)->send(new \App\Mail\UserCredentialsMail($email, $password));
 
         $user = UserLogin::create([
             'name' => $request->name,
@@ -180,7 +184,7 @@ class UserController extends Controller
         $email = $request->email;
         $password = $request->password;
     
-        \Mail::to($email)->send(new \App\Mail\UserCredentialsMail($email, $password));
+        Mail::to($email)->send(new \App\Mail\UserCredentialsMail($email, $password));
 
         $associative = AssociativeLogin::create([
             'name' => $request->name,
@@ -787,16 +791,18 @@ public function dashboardStats ()
 
 
     // Associate clients
-    $associateClients = UserLogin::whereNotIn('category', ['direct', 'walkin', 'consultant'])->count();
+    $associateClients = AssociateClient::count();
 
     // Associates count by type
     $companyAssociates = AssociativeLogin::where('account_type', 'company')->count();
     $individualAssociates = AssociativeLogin::where('account_type', 'individual')->count();
 
     // Total counts
-    $totalClients = UserLogin::count();
+    $totalClients = $associateClients + $agqrClients;
     $totalAssociates = AssociativeLogin::count();
     $adminCount = Admin::count();
+    $agqrcertificates = Certificate::count();
+    $associatecertificates = AssociateClientCertificate::count();
 
  // Total profiles (sum of all counts)
      $totalProfiles = $totalClients + $totalAssociates + $adminCount;
@@ -810,6 +816,8 @@ public function dashboardStats ()
             'consultant' => $consultantClients,
             'agqr_clients' => $agqrClients,
             'associate_clients' => $associateClients,
+            'associate_certificate' => $associatecertificates,
+            'agqr_certificates' => $agqrcertificates,
             'total' => $totalClients,
         ],
         'associates' => [

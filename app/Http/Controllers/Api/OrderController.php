@@ -259,6 +259,7 @@ public function showOrderDetails(Request $request)
         'address' => $clientProfile->address,
         'product_name' => $order->product_name,
         'product_description' => $order->product_description,
+        'audit_type' => $order->audit_type,
         'total_amount' => $order->total_amount,
         'balance_amount' => $order->balance_amount,
     ];
