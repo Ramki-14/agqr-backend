@@ -31,6 +31,7 @@ class AssociateClientController extends Controller
             'company_name' => 'nullable|string',
             'gst_number' => 'nullable|string',
             'associate_name' => 'required|string',
+            'associate_id' => 'required|integer',
         ]);
 
         $data = $request->all();

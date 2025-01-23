@@ -79,7 +79,34 @@ class OrderController extends Controller
         return response()->json(['orders' => $orders], 200);
     }
 
+    public function getOrderDetails(Request $request)
+    {
+        // Validate the request data
+        $request->validate([
+            'id' => 'required|exists:orders,id',
+            'product_name' => 'required|string',
+        ]);
+    
+        // Find the order by id and product_name
+        $order = Order::where('id', $request->id)
+            ->where('product_name', $request->product_name)
+            ->first();
+    
+        // Check if the order exists
+        if ($order) {
+            return response()->json([
+                'status' => true,
+                'data' => $order,
+            ], 200);
+        }
+    
+        return response()->json([
+            'status' => false,
+            'message' => 'Order not found for the provided details.',
+        ], 404);
+    }
 
+    
 //payment details geting
 public function showPaymentOptions(Request $request)
     {
@@ -128,6 +155,7 @@ public function updateOrder(Request $request)
         'client_id' => 'required|exists:client_profiles,client_id',
         'rate' => 'required|numeric',
         'sgst_amount' => 'required|numeric',
+        'audit_type' => 'required|string',
         'cgst_amount' => 'required|numeric',
         'igst_amount' => 'required|numeric',
         'gst_amount' => 'required|numeric',
@@ -148,11 +176,13 @@ public function updateOrder(Request $request)
     $order->update([
         'rate' => $request->rate,
         'sgst_amount' => $request->sgst_amount,
+        'audit_type' => $request->audit_type,
         'cgst_amount' => $request->cgst_amount,
         'igst_amount' => $request->igst_amount,
         'gst_amount' => $request->gst_amount,
         'total_amount' => $request->total_amount,
         'balance_amount' => $request->total_amount,
+        
     ]);
 
     return response()->json(['message' => 'Order updated successfully.', 'order' => $order], 200);

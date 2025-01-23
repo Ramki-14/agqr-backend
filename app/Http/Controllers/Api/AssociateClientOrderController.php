@@ -55,7 +55,7 @@ public function store(Request $request)
             // Step 3: If the associate exists, update the principal amount
             $associatePayment->update([
                 'principal_amount' => $associatePayment->principal_amount + $validated['associate_payment'],  // Add total_amount to the existing principal_amount
-                'returned_amount' => 0,  // Set returned amount to 0
+                'returned_amount' => $associatePayment->principal_amount + 0,  // Set returned amount to 0
                 'outstanding_amount' => $associatePayment->outstanding_amount + $validated['associate_payment'],  // Recalculate outstanding_amount
             ]);
         }

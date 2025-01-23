@@ -225,6 +225,29 @@ public function index()
 
         return response()->json($data, 200);
     }
+
+    public function getOrderDetailsByCertificateRegNo(Request $request, $certificate_reg_no)
+    {
+        // Fetch the certificate with its related order
+        $certificate = Certificate::where('certificate_reg_no', $certificate_reg_no)
+            ->with('order') // Load the associated order
+            ->first();
+
+        if ($certificate && $certificate->order) {
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'order_id' => $certificate->order->id,
+                    'product_name' => $certificate->order->product_name,
+                ],
+            ], 200);
+        }
+
+        return response()->json([
+            'status' => false,
+            'message' => 'Certificate or associated order not found.',
+        ], 404);
+    }
 }
 
 

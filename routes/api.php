@@ -82,6 +82,7 @@ Route::get('/associative/names', [UserController::class, 'getNames']);
     Route::get('/user/details/{id}', [UserController::class, 'getUserById']);
     Route::get('/associate/details', [UserController::class, 'getAssociateByEmail']);
     Route::get('/associate/details/{id}', [UserController::class, 'getAssociateByID']);
+    Route::get('/associate/email/{id}', [UserController::class, 'getAssociateEmailByID']);
     Route::post('/update/user/{id}', [UserController::class, 'updateUserById']);
     Route::post('/update/associate/{id}', [UserController::class, 'updateAssociateById']);
     Route::post('/update/admin/{id}', [UserController::class, 'updateAdminById']);
@@ -157,6 +158,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/orders/delete', [OrderController::class, 'deleteOrder']);
     Route::post('/orders/update', [OrderController::class, 'updateOrder']);
     Route::post('/order-details', [OrderController::class, 'showOrderDetails']);
+    Route::post('/order-details', [OrderController::class, 'getOrderDetails']);
 
 });
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -171,6 +173,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/certificates/fetch', [CertificatesController::class, 'fetchCertificate']);
     Route::post('/certificates/{id}', [CertificatesController::class, 'update']);
     Route::post('/get-client-details', [CertificatesController::class, 'getClientDetails']);
+    Route::get('/get-order-details/{certificate_reg_no}', [CertificatesController::class, 'getOrderDetailsByCertificateRegNo']);
 });
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/associate-client-orders', [AssociateClientOrderController::class, 'store']);

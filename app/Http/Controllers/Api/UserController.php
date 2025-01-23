@@ -324,7 +324,7 @@ class UserController extends Controller
 public function getNames()
  {
     // Fetch distinct names along with their gst_number
-    $namesWithGst = AssociativeLogin::select('name', 'gst_number')->distinct()->get();
+    $namesWithGst = AssociativeLogin::select('id', 'name', 'gst_number')->distinct()->get();
 
     // Check if any names are found
     if ($namesWithGst->isEmpty()) {
@@ -346,7 +346,7 @@ public function getassociateNamesByCompany(Request $request)
 
     // Fetch associate names and GST numbers by company name
     $associates = AssociativeLogin::where('company_name', $validatedData['company_name'])
-        ->select('name', 'gst_number')
+        ->select('id','name', 'gst_number')
         ->distinct()
         ->get();
 
@@ -442,6 +442,26 @@ public function getassociateNamesByCompany(Request $request)
         }
     
         // Fallback in case the associate is unexpectedly not found
+        return response()->json([
+            'status' => false,
+            'message' => 'Associate not found',
+        ], 404);
+    }
+    public function getAssociateEmailByID(Request $request, $id)
+    {
+        $this->authorizeRequest(); // Ensure the request is authorized
+    
+        // Fetch the associate by ID
+        $associate = AssociativeLogin::find($id);
+    
+        if ($associate) {
+            return response()->json([
+                'status' => true,
+                'email' => $associate->email, // Fetch the email field
+            ], 200);
+        }
+    
+        // Fallback in case the associate is not found
         return response()->json([
             'status' => false,
             'message' => 'Associate not found',
