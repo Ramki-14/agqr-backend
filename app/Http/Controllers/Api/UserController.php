@@ -26,6 +26,60 @@ class UserController extends Controller
      * @param Request $request
      * @return Admin | UserLogin | AssociativeLogin
      */
+
+     public function createAdminwithouttoken(Request $request)
+     {
+ 
+       
+        
+         // Admin can create a new admin
+         $this->validate($request, [
+             'name' => 'required',
+             'email' => [
+                 'required',
+                 'email',
+                 function ($attribute, $value, $fail) {
+                     if (
+                         Admin::where('email', $value)->exists() ||
+                         AssociativeLogin::where('email', $value)->exists() ||
+                         UserLogin::where('email', $value)->exists()
+                     ) {
+                         $fail('The email has already been taken.');
+                     }
+                 },
+             ],
+             'password' => 'required',
+             'contact_no' => 'required',
+             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', 
+             'role' => 'required|in:admin', // Only admins can create admins
+         ]);
+         $imagePath = null;
+         if ($request->hasFile('image')) {
+             $imagePath = $request->file('image')->store('images/users', 'public');
+         }
+ 
+         $email = $request->email;
+         $password = $request->password;
+     
+         Mail::to($email)->send(new \App\Mail\UserCredentialsMail($email, $password));
+     
+     
+         $admin = Admin::create([
+             'name' => $request->name,
+             'email' => $request->email,
+             'password' => Hash::make($request->password),
+             'contact_no' => $request->contact_no,
+             'image' => $imagePath,
+             'role' => $request->role,
+             
+         ]);
+     
+         return response()->json([
+             'status' => true,
+             'message' => 'Admin created successfully',
+         ], 201);
+     }
+
     public function createAdmin(Request $request)
     {
         $currentUser = Auth::user(); 

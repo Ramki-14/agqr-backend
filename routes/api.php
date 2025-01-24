@@ -41,9 +41,9 @@ Route::post('/login', [UserController::class, 'loginUser']);
 
 
 // Middleware to protect routes for different user types
-Route::post('/run-certificate-status', [CommandController::class, 'runCertificateStatus'])->middleware('auth:sanctum');
+Route::post('/run-certificate-status', [CommandController::class, 'runCertificateStatus'])->middleware(['auth:sanctum', 'throttle:100,1']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
     Route::get('/user', function (Request $request) {
         $user = $request->user();
 
@@ -61,16 +61,16 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 
+Route::post('/admincreate/notoken', [UserController::class, 'createAdminwithouttoken']);
 
-
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
     // Existing routes...
     
     Route::post('/admin/create', [UserController::class, 'createAdmin']);
     Route::post('/user/create', [UserController::class, 'createUserLogin']);
     Route::post('/associative/create', [UserController::class, 'createAssociativeLogin']);
 });
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
     Route::get('/admins', [UserController::class, 'getAllAdmins']);
     Route::get('/users', [UserController::class, 'getAllUsers']);
     Route::get('/associates', [UserController::class, 'getAllAssociates']);
@@ -89,7 +89,7 @@ Route::get('/associative/names', [UserController::class, 'getNames']);
     Route::get('/get_DashboardStats', [UserController::class, 'dashboardStats']);
 });
 
-Route::middleware('auth:sanctum')->post('/admin/{id}', [UserController::class, 'updateAdmin']);
+Route::middleware(['auth:sanctum', 'throttle:100,1'])->post('/admin/{id}', [UserController::class, 'updateAdmin']);
 
 Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword']);
 Route::get('/reset-password', function () {
@@ -98,7 +98,7 @@ Route::get('/reset-password', function () {
 
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
 
-Route::post('/update-user', [UserController::class, 'updateUser'])->middleware('auth:sanctum');
+Route::post('/update-user', [UserController::class, 'updateUser'])->middleware(['auth:sanctum', 'throttle:100,1']);
 
 // Route::post('test-update', function (Request $request) {
 //     Log::info('Test Request Data:', $request->all());
@@ -109,13 +109,13 @@ Route::post('/update-user', [UserController::class, 'updateUser'])->middleware('
 //     ]);
 // });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
     // Routes that require authentication
     Route::post('/create-client-profiles', [ClientProfileController::class, 'store']); // Create Client Profile
     Route::post('/update-client-profiles/{client_id}', [ClientProfileController::class, 'updateClientProfile']); // Update Client Profile
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
     Route::post('/associate-client', [AssociateClientController::class, 'store']);
     Route::get('associate/client-name', [AssociateClientController::class, 'getAllClientNames']);
 Route::post('validate-associate-client', [AssociateClientController::class, 'validateAssociateClient']);
@@ -125,14 +125,14 @@ Route::get('/associate-clients', [AssociateClientController::class, 'index']);
   
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
     // Routes that require authentication
     Route::get('/client-profiles/{client_id}', [ClientProfileController::class, 'show']); // Retrieve Client Profile
     Route::get('/client-profiles', [ClientProfileController::class, 'index']); // Get all client profiles
 });
 
 
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
     Route::get('/products', [ProductController::class, 'index']); // List products
     Route::post('/products', [ProductController::class, 'store']); // Add a product
     Route::post('/edit-products/{id}', [ProductController::class, 'update']); // Update a product
@@ -140,7 +140,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
     Route::post('/addsgst', [SGSTController::class, 'store']);
     Route::get('/allsgst', [SGSTController::class, 'getAll']);
 
@@ -151,7 +151,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/alligst', [IGSTController::class, 'getAll']);
 });
 
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{client_id}', [OrderController::class, 'getOrdersByClientId']);
     Route::post('/payment-details', [OrderController::class, 'showPaymentOptions']);
@@ -161,12 +161,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/order-details', [OrderController::class, 'getOrderDetails']);
 
 });
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
     Route::post('/save-payment-details', [PaymentController::class, 'savePayment']);
 });
 
 
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
     Route::post('/certificates', [CertificatesController::class, 'store']);
     Route::get('/all-certificates', [CertificatesController::class, 'index']);
     Route::post('/check-certificate', [CertificatesController::class, 'checkCertificate']);
@@ -175,7 +175,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/get-client-details', [CertificatesController::class, 'getClientDetails']);
     Route::get('/get-order-details/{certificate_reg_no}', [CertificatesController::class, 'getOrderDetailsByCertificateRegNo']);
 });
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
     Route::post('/associate-client-orders', [AssociateClientOrderController::class, 'store']);
     Route::get('/associate-client-orders/{client_id}', [AssociateClientOrderController::class, 'getClientOrdersByClientId']);
     Route::post('/associate-orders/update', [AssociateClientOrderController::class, 'updateAssociateOrder']);
@@ -183,13 +183,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/associate-client-order-details', [AssociateClientOrderController::class, 'showOrderDetails']);
 });
 
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
     Route::get('/associate-payments', [AssociatePaymentController::class, 'index']); // Get all
     Route::post('/payment-recipts-save', [AssociatePaymentController::class, 'store']); // Create payment receipt
     Route::get('/payment-recipts', [AssociatePaymentController::class, 'getPaymentRecipts']); // Get all payment receipts
     Route::get('/payment-recipts-history', [AssociatePaymentController::class, 'getAssociatePaymentReceipts']); // Get all payment receipts
 });
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
     Route::post('/associate-client-certificate', [AssociateClientCertificateController::class, 'store']);
     Route::post('/associate-check-certificate', [AssociateClientCertificateController::class, 'checkCertificate']);
     Route::post('/associate-certificates/fetch', [AssociateClientCertificateController::class, 'fetchCertificate']);

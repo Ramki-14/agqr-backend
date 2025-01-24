@@ -238,6 +238,7 @@ public function index()
             return response()->json([
                 'status' => true,
                 'data' => [
+                    'client_id' => $certificate->order->client_id,
                     'order_id' => $certificate->order->id,
                     'product_name' => $certificate->order->product_name,
                 ],
