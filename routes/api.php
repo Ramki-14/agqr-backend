@@ -194,6 +194,9 @@ Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
     Route::post('/associate-check-certificate', [AssociateClientCertificateController::class, 'checkCertificate']);
     Route::post('/associate-certificates/fetch', [AssociateClientCertificateController::class, 'fetchCertificate']);
     Route::post('/ba-certificates-update/{id}', [AssociateClientCertificateController::class, 'update']);
+    Route::get('/get-associate-client-certificates', [AssociateClientCertificateController::class, 'index']);
+    Route::get('/get-baorder-details/{certificate_reg_no}', [AssociateClientCertificateController::class, 'getOrderDetailsByBaClientCertificateRegNo']);
+    Route::post('/get-associateclient-details', [AssociateClientCertificateController::class, 'getAssociateClientDetails']);
 });
 
 Route::get('/download-file/{filePath}', [FileController::class, 'downloadFile'])

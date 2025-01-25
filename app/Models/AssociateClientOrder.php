@@ -26,4 +26,9 @@ class AssociateClientOrder extends Model
         'associate_name',
         'associate_id',
     ];
+
+    public function clientProfile()
+    {
+        return $this->belongsTo(AssociateClient::class, 'client_id');
+    }
 }

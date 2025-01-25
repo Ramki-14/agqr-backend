@@ -226,6 +226,7 @@ public function showOrderDetails(Request $request)
         'address' => $clientProfile->address,
         'associate_name' => $order->associate_name,
         'product_name' => $order->product_name,
+        'audit_type' => $order->audit_type,
         'product_description' => $order->product_description,
         'total_amount' => $order->total_amount,
     ];
