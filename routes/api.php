@@ -188,6 +188,7 @@ Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
     Route::post('/payment-recipts-save', [AssociatePaymentController::class, 'store']); // Create payment receipt
     Route::get('/payment-recipts', [AssociatePaymentController::class, 'getPaymentRecipts']); // Get all payment receipts
     Route::get('/payment-recipts-history', [AssociatePaymentController::class, 'getAssociatePaymentReceipts']); // Get all payment receipts
+    Route::get('/payment-history', [AssociatePaymentController::class, 'principalhistory']); // Get all payment receipts
 });
 Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
     Route::post('/associate-client-certificate', [AssociateClientCertificateController::class, 'store']);

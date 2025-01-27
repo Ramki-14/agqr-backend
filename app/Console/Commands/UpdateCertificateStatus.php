@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\AssociateClientCertificate;
+use App\Models\AssociateClientOrder;
 use App\Models\Certificate;
 use App\Models\Order;
 use Illuminate\Console\Command;
@@ -31,32 +32,25 @@ class UpdateCertificateStatus extends Command
         $today = Carbon::today(); // Keep the original date
       $sixtyDaysAgo = $today->copy()->subDays(60); // 60 days before today
          $yesterday = $today->copy()->subDays(1); // Yesterday
-         $fortyFiveDaysLater = $today->copy()->addDays(45); // 45 days from today
     
         // Update Certificates
     
         // Update Certificates - Withdraw status (more than 60 days overdue)
-Certificate::where('next_surveillance', '<', $sixtyDaysAgo)
-->where('status', '!=', 'withdraw')
-->update(['status' => 'withdraw']);
+                Certificate::where('next_surveillance', '<', $sixtyDaysAgo)
+                ->where('status', '!=', 'withdraw')
+                ->update(['status' => 'withdraw']);
 
-// Update Certificates - Suspend status (between 1 and 60 days overdue)
-Certificate::whereBetween('next_surveillance', [$sixtyDaysAgo, $yesterday])
-->where('status', '!=', 'suspend')
-->update(['status' => 'suspend']);
+         // Update Certificates - Suspend status (between 1 and 60 days overdue)
+          Certificate::whereBetween('next_surveillance', [$sixtyDaysAgo, $yesterday])
+         ->where('status', '!=', 'suspend')
+         ->update(['status' => 'suspend']);
 
-// Update Certificates - Active status (Next surveillance date is in the future, up to 45 days)
-Certificate::whereDate('next_surveillance', '>=', $today)
-->whereDate('next_surveillance', '<=', $fortyFiveDaysLater)
-->where('status', '!=', 'active')
-->update(['status' => 'active']);
+         // Update Certificates - Active status (Next surveillance date is in the future, up to 45 days)
+        Certificate::whereDate('next_surveillance', '>=', $today)
+        ->where('status', '!=', 'active')
+        ->update(['status' => 'active']);
     
-        // Status: Active (If next surveillance is more than 45 days away)
-        // Certificate::whereDate('next_surveillance', '>', $today->addDays(45))
-        //     ->where('status', '!=', 'active')
-        //     ->update(['status' => 'active']);
-    
-        // Sync statuses to Orders
+       
         $certificates = Certificate::all();
     
         foreach ($certificates as $certificate) {
@@ -79,19 +73,18 @@ AssociateClientCertificate::whereBetween('next_surveillance', [$sixtyDaysAgo, $y
 
 // Active status (Next surveillance date is in the future, up to 45 days)
 AssociateClientCertificate::whereDate('next_surveillance', '>=', $today)
-    ->whereDate('next_surveillance', '<=', $fortyFiveDaysLater)
     ->where('status', '!=', 'active')
     ->update(['status' => 'active']);
 
 // Sync statuses to Orders for Associate Client Certificates
 $associateClientCertificates = AssociateClientCertificate::all();
 
-foreach ($associateClientCertificates as $certificate) {
-    $order = Order::find($certificate->order_id);
+foreach ($associateClientCertificates as $associateClientCertificates) {
+    $associateorder = AssociateClientOrder::find($associateClientCertificates->order_id);
 
-    if ($order) {
-        $order->status = $certificate->status;
-        $order->save();
+    if ($associateorder) {
+        $associateorder->status = $associateClientCertificates->status;
+        $associateorder->save();
     }
 }
 

@@ -7,6 +7,7 @@ use App\Models\AssociateClient;
 use App\Models\AssociateClientCertificate;
 use App\Models\AssociateClientOrder;
 use App\Models\AssociatePayment;
+use App\Models\AssociatePaymentHistory;
 use Illuminate\Http\Request;
 
 class AssociateClientOrderController extends Controller
@@ -77,6 +78,20 @@ public function store(Request $request)
             'associate_name' => $validated['associate_name'],
             'associate_id' => $validated['associate_id'],
         ]);
+
+
+         // Save to the associate_payment_histories table
+         AssociatePaymentHistory::create([
+            'associate_id' => $associatePayment->associate_id,
+            'associate_name' => $associatePayment->associate_name,
+            'associate_company' => $associatePayment->associate_company,
+            'client_id' => $validated['client_id'],
+            'client_name' => $validated['client_name'],
+            'product_name' => $order['product_name'],
+            'total_amount' => $order['total_amount'],
+          'description' => 'Amount Added by ' . $order['total_amount'], 
+        ]);
+
     }
 
     return response()->json(['message' => 'Orders saved successfully'], 201);
@@ -94,6 +109,7 @@ public function getClientOrdersByClientId($client_id)
     return response()->json(['orders' => $orders], 200);
 }
 
+
 public function updateAssociateOrder(Request $request)
 {
     // Validate incoming data
@@ -102,6 +118,7 @@ public function updateAssociateOrder(Request $request)
         'client_id' => 'required|exists:associate_client,id',
         'associate_id' => 'required|exists:associate_client,associate_id',
         'rate' => 'required|numeric',
+        'audit_type' => 'required|string',
         'sgst_amount' => 'required|numeric',
         'cgst_amount' => 'required|numeric',
         'igst_amount' => 'required|numeric',
@@ -119,12 +136,16 @@ public function updateAssociateOrder(Request $request)
         return response()->json(['message' => 'Order not found for the specified client.'], 404);
     }
 
-     // Store the old total amount
-     $oldTotalAmount = $order->total_amount;
+    // Check if the audit type has changed
+    $isAuditTypeChanged = $order->audit_type !== $request->audit_type;
+
+    // Store the old total amount
+    $oldTotalAmount = $order->total_amount;
 
     // Update the order with the provided data
     $order->update([
         'rate' => $request->rate,
+        'audit_type' => $request->audit_type,
         'sgst_amount' => $request->sgst_amount,
         'cgst_amount' => $request->cgst_amount,
         'igst_amount' => $request->igst_amount,
@@ -133,24 +154,46 @@ public function updateAssociateOrder(Request $request)
         'balance_amount' => $request->total_amount,
     ]);
 
-    $amountDifference = $request->total_amount - $oldTotalAmount;
-
     $associatePayment = AssociatePayment::where('associate_id', $request->associate_id)->first();
 
     if ($associatePayment) {
-        if ($amountDifference > 0) {
-            // If the new amount is greater, add the difference to principal and outstanding
-            $associatePayment->principal_amount += $amountDifference;
-            $associatePayment->outstanding_amount += $amountDifference;
-        } elseif ($amountDifference < 0) {
-            // If the new amount is lesser, subtract the difference from principal and outstanding
-            $associatePayment->principal_amount += $amountDifference; // Subtract as the difference is negative
-            $associatePayment->outstanding_amount += $amountDifference;
+
+        $amountDifference = $request->total_amount - $oldTotalAmount;
+        $description = "";
+
+        if ($isAuditTypeChanged) {
+           // If the audit type has changed, add the new total amount to principal and outstanding
+            $associatePayment->principal_amount += $request->total_amount;
+            $associatePayment->outstanding_amount += $request->total_amount;
+            $description = "Audit type changed, added full total amount " . $request->total_amount . " to principal.";   
+        } else {
+            if ($amountDifference > 0) {
+                $associatePayment->principal_amount += $amountDifference;
+                $associatePayment->outstanding_amount += $amountDifference;
+                $description = "Principal amount increased by $amountDifference.";
+            } elseif ($amountDifference < 0) {
+                $associatePayment->principal_amount += $amountDifference; // Subtract as the difference is negative
+                $associatePayment->outstanding_amount += $amountDifference;
+                $description = "Principal amount decreased by $amountDifference.";
+            }
         }
 
         $associatePayment->save();
+
+         // Create a history record
+         AssociatePaymentHistory::create([
+            'associate_id' => $request->associate_id,
+            'associate_name' => $associatePayment->associate_name,
+            'associate_company' => $associatePayment->associate_company,
+            'client_id' => $request->client_id,
+            'client_name' => AssociateClient::find($request->client_id)->client_name ?? 'N/A',
+            'product_name' => $order->product_name,
+            'total_amount' => $amountDifference,
+            'description' => $description,
+            
+        ]);
     }
-    
+
     return response()->json(['message' => 'Order updated successfully.', 'order' => $order], 200);
 }
 
