@@ -9,6 +9,7 @@ use App\Models\AssociateClientOrder;
 use App\Models\AssociatePayment;
 use App\Models\AssociatePaymentHistory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AssociateClientOrderController extends Controller
 {
@@ -19,6 +20,7 @@ public function store(Request $request)
     $validated = $request->validate([
         'associate_company' => 'nullable|string',
         'associate_id' => 'required|integer',
+       
         'associate_name' => 'required|string',
         'associate_payment' => 'required|numeric|min:0',
         'client_id' => 'required|integer',
@@ -36,6 +38,12 @@ public function store(Request $request)
         'orders.*.invoice_number' => 'required|string',
     ]);
 
+    $client = AssociateClient::find($validated['client_id']);
+    if (!$client) {
+        return response()->json(['message' => 'Client not found'], 404);
+    }
+    DB::beginTransaction();
+    try {
     foreach ($validated['orders'] as $order) {
         // Step 1: Check if the associate exists
         $associatePayment = AssociatePayment::where('associate_id', $validated['associate_id'])
@@ -85,16 +93,21 @@ public function store(Request $request)
             'associate_id' => $associatePayment->associate_id,
             'associate_name' => $associatePayment->associate_name,
             'associate_company' => $associatePayment->associate_company,
-            'client_id' => $validated['client_id'],
-            'client_name' => $validated['client_name'],
+            'client_id' => $client->id,
+            'client_name' => $client->client_name,
             'product_name' => $order['product_name'],
             'total_amount' => $order['total_amount'],
           'description' => 'Amount Added by ' . $order['total_amount'], 
         ]);
 
     }
-
+    DB::commit();
     return response()->json(['message' => 'Orders saved successfully'], 201);
+}catch (\Exception $e) {
+    DB::rollBack();
+    return response()->json(['message' => 'Failed to save orders', 'error' => $e->getMessage()], 500);
+}
+
 }
 
 public function getClientOrdersByClientId($client_id)
@@ -203,7 +216,7 @@ public function showAssociateClientOrders(Request $request)
         $request->validate([
             'client_id' => 'required|exists:client_profiles,client_id',
             'order_ids' => 'required|array',
-            'order_ids.*' => 'exists:orders,id',
+            'order_ids.*' => 'exists:associate_client_orders,id',
         ]);
 
         // Extract data from the request

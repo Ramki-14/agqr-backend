@@ -157,7 +157,7 @@ Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
     Route::post('/payment-details', [OrderController::class, 'showPaymentOptions']);
     Route::delete('/orders/delete', [OrderController::class, 'deleteOrder']);
     Route::post('/orders/update', [OrderController::class, 'updateOrder']);
-    Route::post('/order-details', [OrderController::class, 'showOrderDetails']);
+    Route::post('/order-alldetails', [OrderController::class, 'showOrderDetails']);
     Route::post('/order-details', [OrderController::class, 'getOrderDetails']);
 
 });

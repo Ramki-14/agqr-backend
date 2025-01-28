@@ -572,8 +572,12 @@ public function getassociateNamesByCompany(Request $request)
         $admin->email = $request->email;
     }
 
-    if ($request->has('password')) {
+    if ($request->has('password') && !empty($request->password)) {
         $admin->password = Hash::make($request->password);
+    } else {
+        // Do not modify the password if it's not present
+        // You can also explicitly set the password to the current value, though it's not necessary
+        $admin->password = $admin->password; 
     }
 
     if ($request->has('contact_no')) {
@@ -643,7 +647,12 @@ public function getassociateNamesByCompany(Request $request)
         };
         if ($request->has('password')) {
             $currentUser->password = Hash::make($request->password); // Hashing the password
-        };
+        } else {
+            // Do not modify the password if it's not present
+            // You can also explicitly set the password to the current value, though it's not necessary
+            $currentUser->password = $currentUser->password; 
+        }
+        
         if ($request->hasFile('image')) {
             // If there's already an image, delete the old one first
             if ($currentUser->image) {
@@ -707,6 +716,10 @@ public function getassociateNamesByCompany(Request $request)
     
         if ($request->password) {
             $user->password = Hash::make($request->password);
+        } else {
+            // Do not modify the password if it's not present
+            // You can also explicitly set the password to the current value, though it's not necessary
+            $user->password = $user->password; 
         }
     
         if ($request->hasFile('image')) {
@@ -761,6 +774,10 @@ public function getassociateNamesByCompany(Request $request)
     
         if ($request->password) {
             $associate->password = Hash::make($request->password);
+        }else {
+            // Do not modify the password if it's not present
+            // You can also explicitly set the password to the current value, though it's not necessary
+            $associate->password = $associate->password; 
         }
     
         if ($request->hasFile('image')) {
@@ -814,6 +831,10 @@ public function updateAdminById(Request $request, $id)
 
     if ($request->password) {
         $admin->password = Hash::make($request->password);
+    }else {
+        // Do not modify the password if it's not present
+        // You can also explicitly set the password to the current value, though it's not necessary
+        $admin->password = $admin->password; 
     }
 
     if ($request->hasFile('image')) {

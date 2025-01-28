@@ -33,7 +33,7 @@ class AssociateClientCertificateController extends Controller
         // Handle file upload
         $certificateFilePath = null;
         if ($request->hasFile('certificate_file')) {
-            $certificateFilePath =  $request->file('certificate_file')->store('certificates', 'public');
+            $certificateFilePath =  $request->file('certificate_file')->store('Associatecertificates', 'public');
         }
 
         // Store data
@@ -139,7 +139,7 @@ public function update(Request $request, $id)
         }
 
         // Save the new file
-        $data['certificate_file'] = $request->file('certificate_file')->store('certificates', 'public');
+        $data['certificate_file'] = $request->file('certificate_file')->store('Associatecertificates', 'public');
     } else {
         // Keep the old file path
         $data['certificate_file'] = $certificate->certificate_file;
@@ -213,7 +213,7 @@ public function getAssociateClientDetails(Request $request)
         'client_name' => $clientProfile->client_name,
         'associate_name' => $clientProfile->associate_name,
         'address' => $clientProfile->address,
-        'gst_document' => $clientProfile->gst_document,
+        'client_gst_document' => $clientProfile->client_gst_document,
         'product_name' => $order->product_name,
         'product_description' => $order->product_description,
         'audit_type' => $order->audit_type,

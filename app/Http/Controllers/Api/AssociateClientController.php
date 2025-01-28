@@ -38,7 +38,7 @@ class AssociateClientController extends Controller
 
           // Handle file upload for client_gst_document
      if ($request->hasFile('client_gst_document')) {
-        $gstDocumentPath = $request->file('client_gst_document')->store('documents/gstdocuments', 'public');
+        $gstDocumentPath = $request->file('client_gst_document')->store('documents/BaClientgstdocuments', 'public');
         $data['client_gst_document'] = $gstDocumentPath; // Add the path to the data array
      }
 
@@ -153,7 +153,7 @@ class AssociateClientController extends Controller
         }
     
         // Store the new document
-        $gstDocumentPath = $request->file('client_gst_document')->store('documents/gstdocuments', 'public');
+        $gstDocumentPath = $request->file('client_gst_document')->store('documents/BaClientgstdocuments', 'public');
         $data['client_gst_document'] = $gstDocumentPath; // Add the new path to the data array
     } else {
         // No file is uploaded, but an old document exists
