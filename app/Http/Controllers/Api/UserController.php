@@ -575,8 +575,7 @@ public function getassociateNamesByCompany(Request $request)
     if ($request->has('password') && !empty($request->password)) {
         $admin->password = Hash::make($request->password);
     } else {
-        // Do not modify the password if it's not present
-        // You can also explicitly set the password to the current value, though it's not necessary
+        
         $admin->password = $admin->password; 
     }
 
@@ -631,7 +630,7 @@ public function getassociateNamesByCompany(Request $request)
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:admins,email,' . $currentUser->id, // Update email validation to ignore current user
             'contact_no' => 'nullable|string|max:20',
-            'password' => 'nullable|string|min:8', // Optionally, you may want to hash this
+            'password' => 'nullable|string|min:6', // Optionally, you may want to hash this
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
     
@@ -645,13 +644,11 @@ public function getassociateNamesByCompany(Request $request)
         if ($request->has('contact_no')) {
             $currentUser->contact_no = $request->contact_no;
         };
-        if ($request->has('password')) {
-            $currentUser->password = Hash::make($request->password); // Hashing the password
+        if ($request->has('password') && !empty($request->password)) {
+            $currentUser->password = Hash::make($request->password);
         } else {
-            // Do not modify the password if it's not present
-            // You can also explicitly set the password to the current value, though it's not necessary
             $currentUser->password = $currentUser->password; 
-        }
+        };
         
         if ($request->hasFile('image')) {
             // If there's already an image, delete the old one first
@@ -696,7 +693,7 @@ public function getassociateNamesByCompany(Request $request)
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:user_login,email,' . $user->id,
             'contact_no' => 'nullable|string|max:20',
-            'password' => 'nullable|string|min:8',
+            'password' => 'nullable|string|min:6',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
     
@@ -714,11 +711,11 @@ public function getassociateNamesByCompany(Request $request)
         }
         $user->contact_no = $request->contact_no ?? $user->contact_no;
     
-        if ($request->password) {
+       
+
+        if ($request->has('password') && !empty($request->password)) {
             $user->password = Hash::make($request->password);
         } else {
-            // Do not modify the password if it's not present
-            // You can also explicitly set the password to the current value, though it's not necessary
             $user->password = $user->password; 
         }
     
@@ -760,7 +757,7 @@ public function getassociateNamesByCompany(Request $request)
             'gst_number' => 'nullable', // Validate GST format (15 digits)
             'company_name' => 'nullable|string|max:255',
             'account_type' => 'nullable|string|max:255',
-            'password' => 'nullable|string',
+            'password' => 'nullable|string|min:6',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
     
@@ -772,11 +769,9 @@ public function getassociateNamesByCompany(Request $request)
         $associate->company_name = $request->company_name ?? $associate->company_name;
         $associate->account_type = $request->account_type ?? $associate->account_type;
     
-        if ($request->password) {
+        if ($request->has('password') && !empty($request->password)) {
             $associate->password = Hash::make($request->password);
-        }else {
-            // Do not modify the password if it's not present
-            // You can also explicitly set the password to the current value, though it's not necessary
+        } else {
             $associate->password = $associate->password; 
         }
     
@@ -820,7 +815,7 @@ public function updateAdminById(Request $request, $id)
         'name' => 'nullable|string|max:255',
         'email' => 'nullable|email|unique:admins,email,' . $admin->id,
         'contact_no' => 'nullable|string|max:20',
-        'password' => 'nullable|string|min:8',
+        'password' => 'nullable|string|min:6',
         'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
     ]);
 
@@ -829,11 +824,9 @@ public function updateAdminById(Request $request, $id)
     $admin->email = $request->email ?? $admin->email;
     $admin->contact_no = $request->contact_no ?? $admin->contact_no;
 
-    if ($request->password) {
+    if ($request->has('password') && !empty($request->password)) {
         $admin->password = Hash::make($request->password);
-    }else {
-        // Do not modify the password if it's not present
-        // You can also explicitly set the password to the current value, though it's not necessary
+    } else {
         $admin->password = $admin->password; 
     }
 

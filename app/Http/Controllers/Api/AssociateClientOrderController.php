@@ -214,7 +214,7 @@ public function showAssociateClientOrders(Request $request)
     {
         // Validate the request data
         $request->validate([
-            'client_id' => 'required|exists:client_profiles,client_id',
+            'client_id' => 'required|exists:associate_client,id',
             'order_ids' => 'required|array',
             'order_ids.*' => 'exists:associate_client_orders,id',
         ]);
