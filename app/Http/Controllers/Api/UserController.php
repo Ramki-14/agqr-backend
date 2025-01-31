@@ -309,18 +309,14 @@ class UserController extends Controller
                 // Validate the password (since you're not using hashing, we use direct comparison)
                 if ($user && Hash::check($request->password, $user->password)) {
                     // Create Sanctum token
-                    $token = $user->createToken('auth_token')->plainTextToken;
+                    $token = $user->createToken('auth_token', [$userType])->plainTextToken;
 
                     return response()->json([
                         'status' => true,
                         'message' => 'Login successful',
                         'token' => $token,
                         'user' => [
-                            'id' => $user->id,
-                            'name' => $user->name,
                             'email' => $user->email,
-                            'contact_no' => $user->contact_no,
-                            'image' => $user->image,
                             'role' => $user->role  // Fetch role directly from the database
                         ]
                     ], 200);
@@ -343,6 +339,35 @@ class UserController extends Controller
             ], 500);
         }
     }
+
+
+public function logoutUser(Request $request)
+{
+    try {
+        // Get the authenticated user
+        $user = $request->user();
+
+        if ($user) {
+            // Revoke all tokens for the authenticated user
+            $user->tokens()->delete();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Logout successful',
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+    } catch (\Throwable $th) {
+        return response()->json([
+            'status' => false,
+            'message' => $th->getMessage()
+        ], 500);
+    }
+}
     public function getAllAdmins()
     {
         $this->authorizeRequest();
@@ -616,65 +641,122 @@ public function getassociateNamesByCompany(Request $request)
     }
 
 
-
-    
-
     public function updateUser(Request $request)
     {
-        $currentUser = Auth::user();
+        $currentUser = Auth::user(); // Get the currently authenticated user
     
-       
+        // Determine the user table/model dynamically
+        $userClass = get_class($currentUser);
+    
+        // Validation rules based on user type
+        $rules = [
+            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|unique:' . (new $userClass)->getTable() . ',email,' . $currentUser->id, // Dynamic table
+            'contact_no' => 'nullable|string|max:20',
+            'password' => 'nullable|string|min:8', // Password hashing optional based on your requirement
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ];
     
         // Validate the request data
-        $this->validate($request, [
-            'name' => 'nullable|string|max:255',
-            'email' => 'nullable|email|unique:admins,email,' . $currentUser->id, // Update email validation to ignore current user
-            'contact_no' => 'nullable|string|max:20',
-            'password' => 'nullable|string|min:6', // Optionally, you may want to hash this
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ]);
+        $this->validate($request, $rules);
     
-        // Update fields if they are present
+        // Update fields dynamically
         if ($request->has('name')) {
             $currentUser->name = $request->name;
         }
         if ($request->has('email')) {
             $currentUser->email = $request->email;
-        };
+        }
         if ($request->has('contact_no')) {
             $currentUser->contact_no = $request->contact_no;
-        };
+        }
         if ($request->has('password') && !empty($request->password)) {
             $currentUser->password = Hash::make($request->password);
-        } else {
-            $currentUser->password = $currentUser->password; 
-        };
-        
+        }
+    
         if ($request->hasFile('image')) {
-            // If there's already an image, delete the old one first
+            // Delete the old image if it exists
             if ($currentUser->image) {
                 $imagePath = 'public/' . $currentUser->image;
                 if (Storage::exists($imagePath)) {
                     Storage::delete($imagePath);
                 }
             }
-        
+    
+            // Save the new image
             $image = $request->file('image');
             $imageName = uniqid('user_') . '.' . $image->getClientOriginalExtension();
-        
             $imagePath = $image->storeAs('images/users', $imageName, 'public');
-        
             $currentUser->image = $imagePath;
-        };
-     
+        }
+    
+        // Save the updated user information
         $currentUser->save();
     
+        // Return the updated user details
         return response()->json([
             'status' => true,
             'message' => 'User updated successfully',
-            'user' => $currentUser
+            'user' => $currentUser->makeHidden(['password']), // Hide password in the response
         ], 200);
     }
+    
+    
+
+    // public function updateUser(Request $request)
+    // {
+    //     $currentUser = Auth::user();
+    
+    //     // Validate the request data
+    //     $this->validate($request, [
+    //         'name' => 'nullable|string|max:255',
+    //         'email' => 'nullable|email|unique:admins,email,' . $currentUser->id, // Update email validation to ignore current user
+    //         'contact_no' => 'nullable|string|max:20',
+    //         'password' => 'nullable|string|min:8', // Optionally, you may want to hash this
+    //         'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+    //     ]);
+    
+    //     // Update fields if they are present
+    //     if ($request->has('name')) {
+    //         $currentUser->name = $request->name;
+    //     }
+    //     if ($request->has('email')) {
+    //         $currentUser->email = $request->email;
+    //     };
+    //     if ($request->has('contact_no')) {
+    //         $currentUser->contact_no = $request->contact_no;
+    //     };
+    //     if ($request->has('password') && !empty($request->password)) {
+    //         $currentUser->password = Hash::make($request->password);
+    //     } else {
+    //         $currentUser->password = $currentUser->password; 
+    //     };
+        
+    //     if ($request->hasFile('image')) {
+    //         // If there's already an image, delete the old one first
+    //         if ($currentUser->image) {
+    //             $imagePath = 'public/' . $currentUser->image;
+    //             if (Storage::exists($imagePath)) {
+    //                 Storage::delete($imagePath);
+    //             }
+    //         }
+        
+    //         $image = $request->file('image');
+    //         $imageName = uniqid('user_') . '.' . $image->getClientOriginalExtension();
+        
+    //         $imagePath = $image->storeAs('images/users', $imageName, 'public');
+        
+    //         $currentUser->image = $imagePath;
+    //     };
+     
+    //     $currentUser->save();
+    
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'User updated successfully',
+    //         'user' => $currentUser
+    //     ], 200);
+    // }
     
     public function updateUserById(Request $request, $id)
     {
