@@ -172,8 +172,11 @@ Route::middleware(['auth:sanctum', 'throttle:100,1', 'role:admin'])->group(funct
     Route::post('/certificates/fetch', [CertificatesController::class, 'fetchCertificate']);
     Route::post('/certificates/{id}', [CertificatesController::class, 'update']);
     Route::post('/get-client-details', [CertificatesController::class, 'getClientDetails']);
-    Route::get('/get-order-details/{certificate_reg_no}', [CertificatesController::class, 'getOrderDetailsByCertificateRegNo']);
+    Route::get('/total-certificates', [CertificatesController::class, 'getCertificateCounts']);
+    Route::get('/initial-approvals/{year}', [CertificatesController::class, 'getInitialApprovalCountByMonth']);  
+      Route::get('/get-order-details/{certificate_reg_no}', [CertificatesController::class, 'getOrderDetailsByCertificateRegNo']);
 });
+
 Route::middleware(['auth:sanctum', 'throttle:100,1', 'role:admin'])->group(function () {
     Route::post('/associate-client-orders', [AssociateClientOrderController::class, 'store']);
     Route::get('/associate-client-orders/{client_id}', [AssociateClientOrderController::class, 'getClientOrdersByClientId']);
@@ -192,11 +195,14 @@ Route::middleware(['auth:sanctum', 'throttle:100,1', 'role:admin'])->group(funct
 Route::middleware(['auth:sanctum', 'throttle:100,1', 'role:admin'])->group(function () {
     Route::post('/associate-client-certificate', [AssociateClientCertificateController::class, 'store']);
     Route::post('/associate-check-certificate', [AssociateClientCertificateController::class, 'checkCertificate']);
+    Route::get('/associate-certificate-counts', [AssociateClientCertificateController::class, 'getAssociateClientCertificateCounts']);
     Route::post('/associate-certificates/fetch', [AssociateClientCertificateController::class, 'fetchCertificate']);
     Route::post('/ba-certificates-update/{id}', [AssociateClientCertificateController::class, 'update']);
     Route::get('/get-associate-client-certificates', [AssociateClientCertificateController::class, 'index']);
     Route::get('/get-baorder-details/{certificate_reg_no}', [AssociateClientCertificateController::class, 'getOrderDetailsByBaClientCertificateRegNo']);
     Route::post('/get-associateclient-details', [AssociateClientCertificateController::class, 'getAssociateClientDetails']);
+    Route::get('/associate-initial-approvals/{year}', [AssociateClientCertificateController::class, 'getBAInitialApprovalCountByMonth']);  
+
 });
 
 Route::get('/download-file/{filePath}', [FileController::class, 'downloadFile'])

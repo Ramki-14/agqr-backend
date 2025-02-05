@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use App\Models\ClientProfile;
 use App\Models\Order;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -250,6 +252,43 @@ public function index()
             'message' => 'Certificate or associated order not found.',
         ], 404);
     }
+
+    public function getCertificateCounts()
+{
+    $today = Carbon::today();
+    $activeCount = Certificate::where('status', 'active')->count();
+    $suspendCount = Certificate::where('status', 'suspend')->count();
+    $withdrawCount = Certificate::where('status', 'withdraw')->count();
+    
+    // Count of upcoming audits (status = active and next_surveillance_date within 45 days)
+    $upcomingAuditCount = Certificate::where('status', 'active')
+        ->where('next_surveillance', '<=', $today->copy()->addDays(45))
+        ->where('next_surveillance', '>=', $today)
+        ->count();
+
+    return response()->json([
+        'active' => $activeCount,
+        'suspend' => $suspendCount,
+        'withdraw' => $withdrawCount,
+        'upcoming_audit' => $upcomingAuditCount,
+        'total_certificates' => $activeCount + $suspendCount + $withdrawCount + $upcomingAuditCount,
+    ]);
+}
+
+public function getInitialApprovalCountByMonth($year)
+{
+    $data = Certificate::select(
+            DB::raw('MONTH(initial_approval) as month'), 
+            DB::raw('COUNT(*) as count')
+        )
+        ->whereYear('initial_approval', $year)
+        ->groupBy(DB::raw('MONTH(initial_approval)'))
+        ->orderBy(DB::raw('MONTH(initial_approval)'))
+        ->get();
+
+    return response()->json($data);
+}
+
 }
 
 

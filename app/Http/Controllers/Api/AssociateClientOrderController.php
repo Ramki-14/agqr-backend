@@ -20,7 +20,6 @@ public function store(Request $request)
     $validated = $request->validate([
         'associate_company' => 'nullable|string',
         'associate_id' => 'required|integer',
-       
         'associate_name' => 'required|string',
         'associate_payment' => 'required|numeric|min:0',
         'client_id' => 'required|integer',

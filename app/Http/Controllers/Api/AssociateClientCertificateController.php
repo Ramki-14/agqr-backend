@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\AssociateClient;
 use App\Models\AssociateClientCertificate;
 use App\Models\AssociateClientOrder;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AssociateClientCertificateController extends Controller
 {
@@ -254,6 +256,41 @@ public function getOrderDetailsByBaClientCertificateRegNo(Request $request, $cer
         'status' => false,
         'message' => 'Certificate or associated order not found.',
     ], 404);
+}
+
+public function getAssociateClientCertificateCounts()
+{
+    $today = Carbon::today();
+    $activeCount = AssociateClientCertificate::where('status', 'active')->count();
+    $suspendCount = AssociateClientCertificate::where('status', 'suspend')->count();
+    $withdrawCount = AssociateClientCertificate::where('status', 'withdraw')->count();
+    
+    // Count of upcoming audits (status = active and next_surveillance_date within 45 days)
+    $upcomingAuditCount = AssociateClientCertificate::where('status', 'active')
+        ->where('next_surveillance', '<=', $today->copy()->addDays(45))
+        ->where('next_surveillance', '>=', $today)
+        ->count();
+
+    return response()->json([
+        'active' => $activeCount,
+        'suspend' => $suspendCount,
+        'withdraw' => $withdrawCount,
+        'upcoming_audit' => $upcomingAuditCount,
+        'total_associate_certificates' => $activeCount + $suspendCount + $withdrawCount + $upcomingAuditCount,
+    ]);
+}
+public function getBAInitialApprovalCountByMonth($year)
+{
+    $data = AssociateClientCertificate::select(
+            DB::raw('MONTH(initial_approval) as month'), 
+            DB::raw('COUNT(*) as count')
+        )
+        ->whereYear('initial_approval', $year)
+        ->groupBy(DB::raw('MONTH(initial_approval)'))
+        ->orderBy(DB::raw('MONTH(initial_approval)'))
+        ->get();
+
+    return response()->json($data);
 }
 
 }

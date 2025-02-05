@@ -934,11 +934,12 @@ public function updateAdminById(Request $request, $id)
 public function dashboardStats ()
 {
     // Client counts by type
-    $directClients = UserLogin::where('category', 'direct')->count();
-    $walkInClients = UserLogin::where('category', 'walkin')->count();
-    $consultantClients = UserLogin::where('category', 'consultant')->count();
-    $agqrClients = UserLogin::where('category', ['direct', 'walkin', 'consultant'])->count();
+    // $directClients = UserLogin::where('category', 'direct')->count();
+    // $walkInClients = UserLogin::where('category', 'walkin')->count();
+    // $consultantClients = UserLogin::where('category', 'consultant')->count();
+    // $agqrClients = UserLogin::where('category', ['direct', 'walkin', 'consultant'])->count();
 
+    $agqrClients = ClientProfile::count();
 
     // Associate clients
     $associateClients = AssociateClient::count();
@@ -961,9 +962,6 @@ public function dashboardStats ()
     // Return response
     return response()->json([
         'clients' => [
-            'direct' => $directClients,
-            'walkin' => $walkInClients,
-            'consultant' => $consultantClients,
             'agqr_clients' => $agqrClients,
             'associate_clients' => $associateClients,
             'associate_certificate' => $associatecertificates,
