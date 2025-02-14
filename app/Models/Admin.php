@@ -23,6 +23,7 @@ class Admin extends Authenticatable
         'contact_no',
         'image',
         'role',
+         'address',
     ];
 
 }

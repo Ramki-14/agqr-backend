@@ -38,6 +38,8 @@ use Illuminate\Support\Facades\Log;
 Route::post('/register', [UserController::class, 'createUser']);
 
 Route::post('/login', [UserController::class, 'loginUser']);
+Route::post('/login-user/details', [UserController::class, 'loginUserRole']);
+
 
 
 // Middleware to protect routes for different user types

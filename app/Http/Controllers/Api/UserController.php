@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
@@ -52,6 +53,7 @@ class UserController extends Controller
              'contact_no' => 'required',
              'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', 
              'role' => 'required|in:admin', // Only admins can create admins
+             'address' => 'required|string'
          ]);
          $imagePath = null;
          if ($request->hasFile('image')) {
@@ -71,6 +73,7 @@ class UserController extends Controller
              'contact_no' => $request->contact_no,
              'image' => $imagePath,
              'role' => $request->role,
+             'address' => $request->address
              
          ]);
      
@@ -108,6 +111,7 @@ class UserController extends Controller
             'contact_no' => 'required',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', 
             'role' => 'required|in:admin', // Only admins can create admins
+            'address' => 'required|string',
         ]);
         $imagePath = null;
         if ($request->hasFile('image')) {
@@ -127,7 +131,7 @@ class UserController extends Controller
             'contact_no' => $request->contact_no,
             'image' => $imagePath,
             'role' => $request->role,
-            
+            'address' => $request->address,
         ]);
     
         return response()->json([
@@ -227,6 +231,7 @@ class UserController extends Controller
             'account_type' => 'required',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', 
             'role' => 'required|in:associative', // Only associative can be created
+            'address' => 'required|string',
         ]);
     
         $imagePath = null;
@@ -250,6 +255,7 @@ class UserController extends Controller
             'account_type' => $request->account_type,
             'image' => $imagePath,
             'role' => $request->role,
+            'address' => $request->address,
         ]);
     
         return response()->json([
@@ -311,14 +317,21 @@ class UserController extends Controller
                     // Create Sanctum token
                     $token = $user->createToken('auth_token', [$userType])->plainTextToken;
 
+                    $userData = [
+                        'email' => $user->email,
+                        'role' => $user->role, // Fetch role directly from the database
+                    ];
+    
+                    // Only include 'address' for Admin or AssociativeLogin users
+                    if ($userType === 'admin' || $userType === 'associative') {
+                        $userData['address'] = $user->address;
+                    }
+
                     return response()->json([
                         'status' => true,
                         'message' => 'Login successful',
                         'token' => $token,
-                        'user' => [
-                            'email' => $user->email,
-                            'role' => $user->role  // Fetch role directly from the database
-                        ]
+                        'user' => $userData
                     ], 200);
                 } else {
                     return response()->json([
@@ -340,6 +353,72 @@ class UserController extends Controller
         }
     }
 
+    public function loginUserRole(Request $request)
+{
+    try {
+        // Validate input
+        $validateUser = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if ($validateUser->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation error',
+                'errors' => $validateUser->errors()
+            ], 422); // ✅ Changed to 422 for validation error
+        }
+
+        $user = null;
+        $userType = null;
+
+        // Find user from different tables
+        if (!$user) {
+            $user = Admin::where('email', $request->email)->first();
+            $userType = $user ? 'admin' : null;
+        }
+        if (!$user) {
+            $user = UserLogin::where('email', $request->email)->first();
+            $userType = $user ? 'user' : null;
+        }
+        if (!$user) {
+            $user = AssociativeLogin::where('email', $request->email)->first();
+            $userType = $user ? 'associative' : null;
+        }
+
+        if ($user) {
+            // ✅ Removed undefined $token
+            $userData = [
+                'email' => $user->email,
+                'role' => $user->role ?? 'N/A', // If role is missing, use 'N/A'
+            ];
+
+            // ✅ Include address only for Admin or AssociativeLogin users
+            if ($userType === 'admin' || $userType === 'associative') {
+                $userData['address'] = $user->address ?? 'No address available';
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'User found',
+                'user' => $userData
+            ], 200);
+        }
+
+        // ✅ If no user is found, return proper response
+        return response()->json([
+            'status' => false,
+            'message' => 'User not found',
+        ], 404);
+    } catch (\Throwable $th) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Server error: ' . $th->getMessage()
+        ], 500);
+    }
+}
+
+   
 
 public function logoutUser(Request $request)
 {
@@ -586,6 +665,7 @@ public function getassociateNamesByCompany(Request $request)
         'contact_no' => 'nullable',
         'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         'role' => 'nullable|in:admin',
+        'address' => 'nullable|string',
     ]);
 
     // Update the admin's details
@@ -610,6 +690,10 @@ public function getassociateNamesByCompany(Request $request)
 
     if ($request->has('role')) {
         $admin->role = $request->role;
+    }
+
+    if ($request->has('address')) {
+        $admin->role = $request->address;
     }
 
     if ($request->hasFile('image')) {
@@ -644,6 +728,10 @@ public function getassociateNamesByCompany(Request $request)
     public function updateUser(Request $request)
     {
         $currentUser = Auth::user(); // Get the currently authenticated user
+      
+if (!$currentUser || !($currentUser instanceof \Illuminate\Database\Eloquent\Model)) {
+    return response()->json(['status' => false, 'message' => 'User not authenticated or invalid user model'], 403);
+}
     
         // Determine the user table/model dynamically
         $userClass = get_class($currentUser);
@@ -651,10 +739,11 @@ public function getassociateNamesByCompany(Request $request)
         // Validation rules based on user type
         $rules = [
             'name' => 'nullable|string|max:255',
-            'email' => 'nullable|email|unique:' . (new $userClass)->getTable() . ',email,' . $currentUser->id, // Dynamic table
+            'email' => 'nullable|email|unique:' .$currentUser->getTable().',email,'.$currentUser->id,
             'contact_no' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:8', // Password hashing optional based on your requirement
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+             'address' => 'nullable|string'
         ];
     
         // Validate the request data
@@ -672,6 +761,16 @@ public function getassociateNamesByCompany(Request $request)
         }
         if ($request->has('password') && !empty($request->password)) {
             $currentUser->password = Hash::make($request->password);
+        }
+        if ($request->has('address') && !empty($request->address)) {
+            // Only update if the model has an address field
+            if (Schema::hasColumn($currentUser->getTable(), 'address')) {
+                $currentUser->address = $request->address;
+            }
+        } else if ($request->has('address')) {
+            if (Schema::hasColumn($currentUser->getTable(), 'address')) {
+                $currentUser->address = $currentUser->address; 
+            }
         }
     
         if ($request->hasFile('image')) {
@@ -777,6 +876,7 @@ public function getassociateNamesByCompany(Request $request)
             'contact_no' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:6',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'address' => 'nullable|string'
         ]);
     
         // Update user fields
@@ -792,13 +892,22 @@ public function getassociateNamesByCompany(Request $request)
             }
         }
         $user->contact_no = $request->contact_no ?? $user->contact_no;
-    
-       
+      
 
         if ($request->has('password') && !empty($request->password)) {
             $user->password = Hash::make($request->password);
         } else {
             $user->password = $user->password; 
+        }
+        if ($request->has('address') && !empty($request->address)) {
+            // Only update if the model has an address field
+            if (Schema::hasColumn($user->getTable(), 'address')) {
+                $user->address = $request->address;
+            }
+        } else if ($request->has('address')) {
+            if (Schema::hasColumn($user->getTable(), 'address')) {
+                $user->address = $user->address; 
+            }
         }
     
         if ($request->hasFile('image')) {
@@ -841,6 +950,7 @@ public function getassociateNamesByCompany(Request $request)
             'account_type' => 'nullable|string|max:255',
             'password' => 'nullable|string|min:6',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'address' => 'nullable|string',
         ]);
     
         // Update associate fields
@@ -849,6 +959,7 @@ public function getassociateNamesByCompany(Request $request)
         $associate->contact_no = $request->contact_no ?? $associate->contact_no;
         $associate->gst_number = $request->gst_number ?? $associate->gst_number;
         $associate->company_name = $request->company_name ?? $associate->company_name;
+        $associate->address = $request->address ?? $associate->address;
         $associate->account_type = $request->account_type ?? $associate->account_type;
     
         if ($request->has('password') && !empty($request->password)) {
@@ -899,12 +1010,14 @@ public function updateAdminById(Request $request, $id)
         'contact_no' => 'nullable|string|max:20',
         'password' => 'nullable|string|min:6',
         'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        'address' => 'nullable|string'
     ]);
 
     // Update admin fields
     $admin->name = $request->name ?? $admin->name;
     $admin->email = $request->email ?? $admin->email;
     $admin->contact_no = $request->contact_no ?? $admin->contact_no;
+    $admin->address = $request->address ?? $admin->address;
 
     if ($request->has('password') && !empty($request->password)) {
         $admin->password = Hash::make($request->password);

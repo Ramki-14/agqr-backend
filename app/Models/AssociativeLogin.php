@@ -24,5 +24,6 @@ class AssociativeLogin extends Authenticatable
         'account_type',
         'image',
         'role',
+        'address',
     ];
 }
